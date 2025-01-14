@@ -1,47 +1,63 @@
+// 声明这是一个客户端组件
 "use client";
 
+// 导入所需的UI组件
 import {
   Card,
   CardContent,
   CardHeader,
   CardFooter,
 } from "@/components/ui/card";
+// 导入滑动手势相关的hooks和类型
 import { useSwipeable, SwipeEventData } from "react-swipeable";
+// 导入React核心hooks
 import { useState, useEffect, useCallback } from "react";
+// 导入Next.js的图片组件
 import Image from "next/image";
+// 导入工具函数,用于合并className
 import { cn } from "@/lib/utils";
+// 导入图标组件
 import { StepBack } from "lucide-react";
+// 导入弹出层相关组件
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+// 导入按钮组件
 import { Button } from "@/components/ui/button";
+// 导入头像相关组件
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+// 导入AI分析组件
 import { AIInsight } from "./ai-insight";
+// 导入X(Twitter)图标
 import { XIcon } from "@/components/icons/x-icon";
 
+// 定义SwipeCard组件的props接口
 interface SwipeCardProps {
-  title: string;
-  content: string;
-  onSwipe: (direction: "left" | "right") => void;
-  date: string;
-  image?: string;
-  favicon?: string;
-  url: string;
-  isTop?: boolean;
-  onBack?: () => void;
-  showBack?: boolean;
+  title: string;           // 新闻标题
+  content: string;         // 新闻内容
+  onSwipe: (direction: "left" | "right") => void;  // 滑动回调函数
+  date: string;           // 发布日期
+  image?: string;         // 新闻图片URL(可选)
+  favicon?: string;       // 网站图标URL(可选)
+  url: string;           // 新闻链接
+  isTop?: boolean;       // 是否是顶部卡片
+  onBack?: () => void;   // 返回回调函数
+  showBack?: boolean;    // 是否显示返回按钮
 }
 
+// 根据标题长度返回对应的字体大小类名
 function getTitleSizeClass(title: string): string {
   if (title.length <= 40) {
-    return "text-2xl"; // Single size for short titles
+    return "text-2xl"; // 短标题使用大字体
   } else if (title.length <= 80) {
-    return "text-xl"; // Medium size for medium titles
+    return "text-xl";  // 中等标题使用中等字体
   } else {
-    return "text-lg"; // Smaller size for long titles
+    return "text-lg";  // 长标题使用小字体
   }
 }
 
+// 定义默认图片路径
 const DEFAULT_IMAGE = '/static/images/default.png';
 
+// 导出SwipeCard组件
 export function SwipeCard({
   title,
   content,
@@ -53,26 +69,30 @@ export function SwipeCard({
   isTop = false,
   showBack = false,
 }: SwipeCardProps) {
-  const [exitX, setExitX] = useState<number>(0);
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [transform, setTransform] = useState({ x: 0, scale: 1, rotate: 0 });
+  // 状态管理
+  const [exitX, setExitX] = useState<number>(0);              // 卡片退出时的X轴位置
+  const [sheetOpen, setSheetOpen] = useState(false);          // 底部弹出层的开关状态
+  const [transform, setTransform] = useState({ x: 0, scale: 1, rotate: 0 }); // 卡片的变换状态
 
+  // 处理滑动事件的回调函数
   const handleSwipe = useCallback((direction: "left" | "right") => {
     const screenWidth = window.innerWidth;
     setExitX(direction === "right" ? screenWidth : -screenWidth);
     onSwipe(direction);
   }, [onSwipe]);
 
+  // 配置滑动手势处理器
   const handlers = useSwipeable({
+    // 滑动过程中的处理
     onSwiping: (e: SwipeEventData) => {
       if (!isTop) return;
       
       const deltaX = e.deltaX;
       const absX = Math.abs(deltaX);
       
-      // Calculate scale and rotation based on swipe distance
+      // 根据滑动距离计算缩放和旋转
       const scale = Math.max(0.8, 1 - absX / 1000);
-      const rotate = (deltaX / 200) * 15; // Max rotation of 15 degrees
+      const rotate = (deltaX / 200) * 15; // 最大旋转15度
       
       setTransform({
         x: deltaX,
@@ -80,15 +100,17 @@ export function SwipeCard({
         rotate,
       });
     },
+    // 滑动结束时的处理
     onSwiped: (e: SwipeEventData) => {
       if (!isTop) return;
       
-      const threshold = 0.4;
-      const velocity = Math.abs(e.velocity);
-      const deltaX = Math.abs(e.deltaX);
+      const threshold = 0.4;  // 滑动阈值
+      const velocity = Math.abs(e.velocity);  // 滑动速度
+      const deltaX = Math.abs(e.deltaX);     // 滑动距离
       const screenWidth = window.innerWidth;
       const swipePercentage = deltaX / (screenWidth * 0.4);
       
+      // 计算滑动是否完成
       const velocityContribution = Math.min(velocity / 2, threshold * 1.2);
       const distanceContribution = swipePercentage;
       const swipeComplete = velocityContribution + distanceContribution > threshold;
@@ -97,17 +119,17 @@ export function SwipeCard({
         const direction = e.deltaX > 0 ? "right" : "left";
         handleSwipe(direction);
       } else {
-        // Reset card position
+        // 重置卡片位置
         setTransform({ x: 0, scale: 1, rotate: 0 });
       }
     },
-    trackMouse: true,
-    trackTouch: true,
-    preventScrollOnSwipe: true,
-    delta: 10,
+    trackMouse: true,        // 启用鼠标追踪
+    trackTouch: true,        // 启用触摸追踪
+    preventScrollOnSwipe: true, // 滑动时阻止页面滚动
+    delta: 10,              // 开始滑动的最小距离
   });
 
-  // Update keyboard shortcut handler
+  // 键盘快捷键处理
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
@@ -126,10 +148,12 @@ export function SwipeCard({
     }
   }, [isTop, handleSwipe]);
 
+  // 处理URL相关的逻辑
   const host = new URL(url).hostname;
   const cleanHost = host.replace(/^www\./, "");
   const googleFaviconUrl = `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
 
+  // 定义卡片样式
   const cardStyle = {
     transform: `translate3d(${exitX || transform.x}px, 0, 0) scale(${transform.scale}) rotate(${transform.rotate}deg)`,
     transition: exitX ? 'transform 0.3s ease-out' : 'transform 0.1s ease-out',
@@ -139,6 +163,7 @@ export function SwipeCard({
     touchAction: isTop ? 'none' : 'auto',
   } as const;
 
+  // 渲染组件
   return (
     <div
       style={cardStyle}
@@ -148,7 +173,7 @@ export function SwipeCard({
     >
       <div className="w-full h-full">
         <Card className="w-full max-h-[84dvh] h-[550px] overflow-hidden flex flex-col bg-card shadow-xl mt-[env(safe-area-inset-top)]">
-          {/* Image Section */}
+          {/* 图片区域 */}
           <div className="relative w-full h-[250px] bg-muted pt-[env(safe-area-inset-top)]">
             <Image
               src={image}
@@ -164,17 +189,17 @@ export function SwipeCard({
               }}
             />
 
-            {/* Updated gradient overlay with conditional intensity */}
+            {/* 渐变遮罩层 */}
             <div
               className={cn(
                 "absolute inset-0 bg-gradient-to-b pointer-events-none z-[1]",
                 image === DEFAULT_IMAGE
-                  ? "from-black/40 via-black/20 to-black/60" // lighter gradient for default image
-                  : "from-black/80 via-black/40 to-black/90" // original gradient for normal images
+                  ? "from-black/40 via-black/20 to-black/60" // 默认图片使用较浅的渐变
+                  : "from-black/80 via-black/40 to-black/90" // 普通图片使用较深的渐变
               )}
             />
 
-            {/* Source at the top */}
+            {/* 来源信息 */}
             <a
               href={url}
               target="_blank"
@@ -191,6 +216,7 @@ export function SwipeCard({
               <span className="text-sm font-medium">{cleanHost}</span>
             </a>
 
+            {/* 标题区域 */}
             <CardHeader className="absolute bottom-0 text-white pointer-events-none px-6 pb-6 z-[2] w-full bg-gradient-to-t from-black/90 via-black/60 to-transparent">
               <h2
                 className={cn(
@@ -204,7 +230,7 @@ export function SwipeCard({
             </CardHeader>
           </div>
 
-          {/* Content Section */}
+          {/* 内容区域 */}
           <div className="flex flex-col flex-1 overflow-hidden">
             <CardContent className="flex-grow py-6 px-6 relative -mt-2 overflow-y-auto pointer-events-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <p className="text-sm leading-normal text-gray-700 dark:text-gray-300 tracking-normal select-none">
@@ -219,6 +245,7 @@ export function SwipeCard({
               </p>
             </CardContent>
 
+            {/* 底部操作区 */}
             <CardFooter className="mt-auto pt-2 flex items-center justify-between gap-2">
               {showBack && (
                 <Button
