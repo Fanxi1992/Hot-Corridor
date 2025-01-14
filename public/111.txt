@@ -1,0 +1,4 @@
+$headers = @{
+    "X-Epigram-Secret" = "X-Epigram-Secret"
+}
+Invoke-WebRequest -Uri http://localhost:3000/api/news/populate -Headers $headers
