@@ -1,49 +1,65 @@
-// 声明这是一个客户端组件
+// 声明这是一个客户端组件，表明该组件将在浏览器端渲染和交互
 "use client";
 
 // 导入所需的UI组件
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardFooter,
+  Card,        // 基础卡片容器组件
+  CardContent, // 卡片内容区域组件
+  CardHeader,  // 卡片头部组件
+  CardFooter,  // 卡片底部组件
 } from "@/components/ui/card";
+
 // 导入滑动手势相关的hooks和类型
+// useSwipeable: 提供跨平台的滑动手势处理能力
+// SwipeEventData: 定义滑动事件的数据类型
 import { useSwipeable, SwipeEventData } from "react-swipeable";
+
 // 导入React核心hooks
+// useState: 管理组件内部状态
+// useEffect: 处理副作用操作
+// useCallback: 优化函数引用，减少不必要的重渲染
 import { useState, useEffect, useCallback } from "react";
-// 导入Next.js的图片组件
+
+// 导入Next.js的图片组件，提供自动优化和懒加载的图片渲染
 import Image from "next/image";
-// 导入工具函数,用于合并className
+
+// 导入工具函数，用于动态合并CSS类名
 import { cn } from "@/lib/utils";
-// 导入图标组件
+
+// 导入图标组件，用于返回/撤销操作
 import { StepBack } from "lucide-react";
-// 导入弹出层相关组件
+
+// 导入弹出层相关组件，用于展示更多详细信息
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-// 导入按钮组件
+
+// 导入按钮组件，提供交互式操作
 import { Button } from "@/components/ui/button";
-// 导入头像相关组件
+
+// 导入头像相关组件，用于展示网站/来源图标
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-// 导入AI分析组件
+
+// 导入AI分析组件，提供文章的智能洞察
 import { AIInsight } from "./ai-insight";
-// 导入X(Twitter)图标
+
+// 导入X(Twitter)图标，用于社交分享
 import { XIcon } from "@/components/icons/x-icon";
 
-// 定义SwipeCard组件的props接口
+// 定义SwipeCard组件的属性接口
+// 详细描述了渲染一张新闻卡片所需的所有数据
 interface SwipeCardProps {
-  title: string;           // 新闻标题
-  content: string;         // 新闻内容
-  onSwipe: (direction: "left" | "right") => void;  // 滑动回调函数
-  date: string;           // 发布日期
-  image?: string;         // 新闻图片URL(可选)
-  favicon?: string;       // 网站图标URL(可选)
-  url: string;           // 新闻链接
-  isTop?: boolean;       // 是否是顶部卡片
-  onBack?: () => void;   // 返回回调函数
-  showBack?: boolean;    // 是否显示返回按钮
+  title: string;           // 新闻标题，决定卡片的主要文字内容
+  content: string;         // 新闻摘要，提供文章的简要描述
+  onSwipe: (direction: "left" | "right") => void;  // 滑动回调函数，处理用户滑动卡片的交互
+  date: string;           // 文章发布日期，展示文章的时间信息
+  image?: string;         // 新闻配图URL，可选，用于增强视觉吸引力
+  favicon?: string;       // 新闻源网站图标URL，可选，标识文章来源
+  url: string;           // 原文链接，允许用户跳转到完整文章
+  isTop?: boolean;       // 标记是否为顶部卡片，控制交互和动画效果
+  onBack?: () => void;   // 返回/撤销操作的回调函数
+  showBack?: boolean;    // 控制是否显示返回/撤销按钮
 }
 
-// 根据标题长度返回对应的字体大小类名
+// 根据标题长度返回对应的字体大小类名，这些标题名字我想后面可以通过max_token来限制大模型生成
 function getTitleSizeClass(title: string): string {
   if (title.length <= 40) {
     return "text-2xl"; // 短标题使用大字体
@@ -57,7 +73,7 @@ function getTitleSizeClass(title: string): string {
 // 定义默认图片路径
 const DEFAULT_IMAGE = '/static/images/default.png';
 
-// 导出SwipeCard组件
+// 导出SwipeCard组件，处理新闻卡片的交互和渲染
 export function SwipeCard({
   title,
   content,
@@ -69,99 +85,186 @@ export function SwipeCard({
   isTop = false,
   showBack = false,
 }: SwipeCardProps) {
-  // 状态管理
-  const [exitX, setExitX] = useState<number>(0);              // 卡片退出时的X轴位置
-  const [sheetOpen, setSheetOpen] = useState(false);          // 底部弹出层的开关状态
-  const [transform, setTransform] = useState({ x: 0, scale: 1, rotate: 0 }); // 卡片的变换状态
+  // 状态管理：控制卡片的交互和动画效果
 
-  // 处理滑动事件的回调函数
+  // exitX：记录卡片退出时的水平位移
+  // 用于控制卡片完全滑出屏幕的动画效果
+  // 正值表示向右滑出，负值表示向左滑出
+  const [exitX, setExitX] = useState<number>(0);              
+
+  // sheetOpen：控制底部详情弹出层的显示状态
+  // 默认为false，点击查看更多时切换为true
+  const [sheetOpen, setSheetOpen] = useState(false);          
+
+  // transform：管理卡片的动态变换效果
+  // x: 水平位移距离
+  // scale: 缩放比例，用于模拟深度和交互反馈
+  // rotate: 旋转角度，增加滑动的自然感
+  const [transform, setTransform] = useState({ x: 0, scale: 1, rotate: 0 }); 
+
+  // handleSwipe：处理卡片滑动的核心函数
+  // 1. 计算屏幕宽度，确定滑出方向
+  // 2. 设置exitX，触发滑出动画
+  // 3. 调用父组件传入的onSwipe回调，处理卡片移除逻辑
   const handleSwipe = useCallback((direction: "left" | "right") => {
+    // 获取屏幕宽度，用于计算滑出距离
     const screenWidth = window.innerWidth;
+    
+    // 根据滑动方向设置exitX
+    // 向右滑：正值，向左滑：负值
     setExitX(direction === "right" ? screenWidth : -screenWidth);
+    
+    // 调用父组件传入的滑动处理函数
     onSwipe(direction);
   }, [onSwipe]);
 
-  // 配置滑动手势处理器
+  // 配置滑动手势处理器，使用react-swipeable库
+  // 提供丰富的手势交互能力
   const handlers = useSwipeable({
-    // 滑动过程中的处理
+    // onSwiping：实时跟踪滑动过程
+    // 仅在顶部卡片（isTop）上生效
     onSwiping: (e: SwipeEventData) => {
+      // 非顶部卡片不响应滑动
       if (!isTop) return;
       
+      // 获取水平滑动距离
       const deltaX = e.deltaX;
       const absX = Math.abs(deltaX);
       
-      // 根据滑动距离计算缩放和旋转
+      // 动态计算缩放效果
+      // 随着滑动距离增加，卡片逐渐缩小
+      // 最小缩放到0.8，保持一定的视觉存在
       const scale = Math.max(0.8, 1 - absX / 1000);
-      const rotate = (deltaX / 200) * 15; // 最大旋转15度
       
+      // 计算旋转角度
+      // 根据滑动方向和距离，最大旋转15度
+      // 增加滑动的自然和趣味感
+      const rotate = (deltaX / 200) * 15; 
+      
+      // 更新transform状态
+      // 实时反馈用户的滑动交互
       setTransform({
-        x: deltaX,
-        scale,
-        rotate,
+        x: deltaX,        // 水平位移
+        scale,            // 缩放比例
+        rotate,           // 旋转角度
       });
     },
-    // 滑动结束时的处理
+
+    // onSwiped：滑动结束时的处理逻辑
     onSwiped: (e: SwipeEventData) => {
+      // 非顶部卡片不响应
       if (!isTop) return;
       
-      const threshold = 0.4;  // 滑动阈值
-      const velocity = Math.abs(e.velocity);  // 滑动速度
-      const deltaX = Math.abs(e.deltaX);     // 滑动距离
-      const screenWidth = window.innerWidth;
+      // 定义滑动阈值和判定参数
+      const threshold = 0.4;        // 触发滑动的阈值比例
+      const velocity = Math.abs(e.velocity);   // 滑动速度
+      const deltaX = Math.abs(e.deltaX);       // 滑动距离
+      const screenWidth = window.innerWidth;   // 屏幕宽度
+      
+      // 计算滑动距离占屏幕的比例
       const swipePercentage = deltaX / (screenWidth * 0.4);
       
-      // 计算滑动是否完成
+      // 综合判定滑动是否完成
+      // 1. 速度贡献：滑动速度的影响
+      // 2. 距离贡献：滑动距离占屏幕的比例
       const velocityContribution = Math.min(velocity / 2, threshold * 1.2);
       const distanceContribution = swipePercentage;
+      
+      // 判断是否完成滑动
       const swipeComplete = velocityContribution + distanceContribution > threshold;
       
       if (swipeComplete) {
+        // 滑动距离/速度满足条件，触发滑动
         const direction = e.deltaX > 0 ? "right" : "left";
         handleSwipe(direction);
       } else {
-        // 重置卡片位置
+        // 未达到滑动阈值，回弹到初始位置
+        // 重置卡片的变换状态
         setTransform({ x: 0, scale: 1, rotate: 0 });
       }
     },
-    trackMouse: true,        // 启用鼠标追踪
-    trackTouch: true,        // 启用触摸追踪
-    preventScrollOnSwipe: true, // 滑动时阻止页面滚动
-    delta: 10,              // 开始滑动的最小距离
-  });
 
-  // 键盘快捷键处理
+    // 配置手势追踪选项
+    trackMouse: true,        // 支持鼠标滑动
+    trackTouch: true,        // 支持触摸滑动
+    preventScrollOnSwipe: true, // 滑动时阻止页面滚动
+    delta: 10,               // 触发滑动的最小距离
+  });
+  // 键盘快捷键处理：为顶部卡片添加快速交互的键盘控制逻辑
   useEffect(() => {
+    // 定义键盘按键事件处理函数
     const handleKeyDown = (e: KeyboardEvent) => {
+      // 检测用户的操作系统类型：Mac还是非Mac
+      // 使用正则表达式匹配常见的苹果设备平台标识
       const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+
+      // 确定修饰键（Command键或Ctrl键）
+      // 在Mac上使用metaKey（Command），在其他系统使用ctrlKey（Ctrl）
       const modifierPressed = isMac ? e.metaKey : e.ctrlKey;
 
+      // 仅在以下条件下触发快捷键：
+      // 1. 当前卡片是顶部卡片（isTop为true）
+      // 2. 按下了修饰键（Command/Ctrl）
+      // 3. 按下的是左右箭头键
       if (isTop && modifierPressed && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+        // 阻止默认的键盘事件行为
         e.preventDefault();
+
+        // 根据按键方向确定滑动方向
+        // 左箭头：向左滑动
+        // 右箭头：向右滑动
         const direction = e.key === "ArrowLeft" ? "left" : "right";
+
+        // 调用滑动处理函数，模拟用户手动滑动卡片
         handleSwipe(direction);
       }
     };
 
+    // 仅在顶部卡片时添加键盘事件监听器
     if (isTop) {
+      // 添加全局键盘按键事件监听
       window.addEventListener("keydown", handleKeyDown);
+
+      // 返回清理函数，组件卸载时移除事件监听
       return () => window.removeEventListener("keydown", handleKeyDown);
     }
-  }, [isTop, handleSwipe]);
+  }, [isTop, handleSwipe]); // 依赖数组，确保在这些值变化时重新绑定事件
 
-  // 处理URL相关的逻辑
-  const host = new URL(url).hostname;
+  // 处理URL相关的逻辑：提取网站域名和图标
+  // url参数来自新闻文章的原文链接
+  const host = new URL(url).hostname; // 获取完整域名（包括www）
+  
+  // 清理域名，移除可能的"www."前缀
+  // 例如：将 "www.example.com" 转换为 "example.com"
   const cleanHost = host.replace(/^www\./, "");
+
+  // 使用Google的favicon服务获取网站图标
+  // 通过域名动态生成网站的favicon图标URL
+  // sz=64 参数指定图标大小为64像素
   const googleFaviconUrl = `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
 
-  // 定义卡片样式
+  // 定义卡片动态样式：控制卡片的变换效果
   const cardStyle = {
+    // 3D平移变换：根据滑动状态控制卡片位置
+    // exitX：卡片完全退出时的位移
+    // transform.x：实时滑动过程中的位移
     transform: `translate3d(${exitX || transform.x}px, 0, 0) scale(${transform.scale}) rotate(${transform.rotate}deg)`,
+
+    // 过渡动画：根据是否完全退出调整动画时间
+    // exitX存在时使用较长的缓出动画
+    // 普通滑动使用短的缓出动画
     transition: exitX ? 'transform 0.3s ease-out' : 'transform 0.1s ease-out',
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
+
+    // 定位和尺寸控制
+    position: 'absolute', // 绝对定位，用于堆叠卡片
+    width: '100%',        // 宽度撑满容器
+    height: '100%',       // 高度撑满容器
+
+    // 触摸行为控制
+    // 仅在顶部卡片时禁用默认触摸滚动
+    // 非顶部卡片保持默认触摸行为
     touchAction: isTop ? 'none' : 'auto',
-  } as const;
+  } as const; // 使用 const 断言，确保类型推断为字面量类型
 
   // 渲染组件
   return (
