@@ -72,6 +72,8 @@ export default async function Home() {
   // 3. await确保JSON解析完成
   const newsArticles: NewsArticle[] = await response.json();
 
+  console.log('newsArticles、cards获取的结果如下：', newsArticles);
+
   // 返回页面JSX结构
   return (
     // main标签作为主要内容容器

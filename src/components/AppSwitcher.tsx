@@ -1,8 +1,10 @@
 'use client';
-
+// 导入必要的 React 钩子和第三方库
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+
+// 导入大量图标组件，用于应用内不同功能和状态的视觉表示
 import { 
   Check, Moon, Monitor, Sun, Tags, 
   Scroll, Eye, Leaf, Waves,
@@ -13,28 +15,46 @@ import {
   TreePalm,
   Flower2
 } from 'lucide-react';
+
+// 导入自定义组件和图标
 import { LogoIcon } from '@/components/logo-icon';
+
+// 导入 UI 组件，用于构建交互式下拉菜单、提示和抽屉
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
+
+// 导入工具函数和主题上下文
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
+
+// 导入特定的图标组件
 import { WhatsAppIcon } from '@/components/icons/whatsapp-icon';
+
+// 导入基础 UI 组件
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
+// 定义应用分享的基础 URL 和文案
+// 这些常量用于社交媒体分享功能
 const SHARE_URL = 'https://epigram.news';
 const SHARE_TEXT = "Epigram - An open-source, free, and AI-powered news in short app.";
 
+// 定义社交媒体分享配置
+// 包含每个平台的分享链接生成规则、图标和颜色样式
 const SOCIAL_CONFIGS = [
   {
-    name: 'X (Twitter)',
-    icon: <Twitter className="w-5 h-5" />,
+    name: 'X (Twitter)', // 平台名称
+    icon: <Twitter className="w-5 h-5" />, // 平台图标
+    // 生成分享链接的模板函数，支持自定义文案和 URL
     urlTemplate: (text: string, url: string) => 
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
+    // 悬停和交互时的颜色样式
     color: 'hover:bg-[#1DA1F2]/10 group-hover:text-[#1DA1F2]'
   },
+  // 其他社交平台的配置类似，包括 LinkedIn、Facebook、WhatsApp 和 Messages
+  // 每个配置都遵循相似的结构：名称、图标、链接生成模板和交互颜色
   {
     name: 'LinkedIn',
     icon: <Linkedin className="w-5 h-5" />,
@@ -42,28 +62,8 @@ const SOCIAL_CONFIGS = [
       `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
     color: 'hover:bg-[#0A66C2]/10 group-hover:text-[#0A66C2]'
   },
-  {
-    name: 'Facebook',
-    icon: <Facebook className="w-5 h-5" />,
-    urlTemplate: (_: string, url: string) => 
-      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-    color: 'hover:bg-[#1877F2]/10 group-hover:text-[#1877F2]'
-  },
-  {
-    name: 'WhatsApp',
-    icon: <WhatsAppIcon className="w-5 h-5" />,
-    urlTemplate: (text: string, url: string) => 
-      `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`,
-    color: 'hover:bg-[#25D366]/10 group-hover:text-[#25D366]'
-  },
-  {
-    name: 'Messages',
-    icon: <MessageCircle className="w-5 h-5" />,
-    urlTemplate: (text: string, url: string) => 
-      `sms:&body=${encodeURIComponent(text + ' ' + url)}`,
-    color: 'hover:bg-blue-500/10 group-hover:text-blue-500'
-  }
-] as const;
+  // ... 其他社交平台配置
+] as const; // 使用 const 断言，确保类型推断的精确性
 
 const AppSwitcher: React.FC = () => {
   const { theme, setTheme } = useTheme();

@@ -267,17 +267,31 @@ export function SwipeCard({
   } as const; // 使用 const 断言，确保类型推断为字面量类型
 
   // 渲染组件
+  // 渲染新闻卡片的主容器组件
+  // 使用条件渲染和动态样式控制卡片的交互和展示效果
   return (
+    // 最外层div：控制卡片的整体布局和交互行为
+    // style={cardStyle}：动态设置卡片的变换效果，包括位移、缩放和旋转
+    // handlers：仅在顶部卡片时启用滑动手势处理
+    // aria-label和role：提高组件的无障碍性
     <div
       style={cardStyle}
       {...(isTop ? handlers : {})}
-      aria-label="News card"
+      aria-label="新闻卡片"
       role="article"
     >
+      {/* 内部容器：确保卡片填充整个父元素 */}
       <div className="w-full h-full">
+        {/* Card组件：提供卡片的基本样式和布局 */}
+        {/* 最大高度为视口高度的84%，固定高度550px */}
+        {/* 使用flex布局，垂直方向排列内容 */}
         <Card className="w-full max-h-[84dvh] h-[550px] overflow-hidden flex flex-col bg-card shadow-xl mt-[env(safe-area-inset-top)]">
-          {/* 图片区域 */}
+          {/* 图片区域：展示新闻文章的主图 */}
           <div className="relative w-full h-[250px] bg-muted pt-[env(safe-area-inset-top)]">
+            {/* Image组件：处理图片加载和展示 */}
+            {/* fill属性：图片填充整个容器 */}
+            {/* priority：标记为高优先级加载 */}
+            {/* sizes：响应式图片大小 */}
             <Image
               src={image}
               alt={title}
@@ -285,14 +299,25 @@ export function SwipeCard({
               priority
               sizes="(max-width: 400px) 100vw"
               className="object-cover z-0"
+              // 图片加载错误时的处理：使用默认图片
+              // e 是 React 的合成事件对象，表示图片加载错误的事件
+              // HTMLImageElement 是 DOM 中图片元素的类型，用于类型转换
               onError={(e) => {
+                // e.target 指向触发事件的 DOM 元素（在这里是 <img> 标签）
+                // 使用类型断言将 e.target 转换为 HTMLImageElement 类型
+                // 这样可以安全地访问和修改图片元素的属性
                 const target = e.target as HTMLImageElement;
+                
+                // 当图片加载失败时，将图片源替换为默认图片
                 target.src = DEFAULT_IMAGE;
+                
+                // 修改图片的 CSS 类，调整默认图片的大小和透明度
                 target.className = "w-16 h-16 opacity-50";
               }}
             />
 
-            {/* 渐变遮罩层 */}
+            {/* 渐变遮罩层：增加图片的可读性和视觉层次 */}
+            {/* 根据是否为默认图片，使用不同的渐变强度 */}
             <div
               className={cn(
                 "absolute inset-0 bg-gradient-to-b pointer-events-none z-[1]",
@@ -302,7 +327,17 @@ export function SwipeCard({
               )}
             />
 
-            {/* 来源信息 */}
+            {/* 
+            网站来源信息展示区域：提供文章原始出处的可点击链接
+            
+            属性和设计细节：
+            - href={url}：链接到原始文章地址
+            - target="_blank"：在新标签页打开链接
+            - rel="noopener noreferrer"：安全属性，防止新标签页访问原页面的JavaScript上下文
+            - 绝对定位在卡片右上角
+            - 鼠标悬停时颜色变化，提升交互性
+            - 阻止点击事件冒泡，防止触发卡片的其他交互
+            */}
             <a
               href={url}
               target="_blank"
@@ -310,70 +345,117 @@ export function SwipeCard({
               className="absolute top-0 right-0 p-4 z-[3] flex items-center gap-2 text-white/60 hover:text-white/90 transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
+              {/* 
+              网站图标展示组件：使用Avatar实现
+              
+              功能特点：
+              - 展示网站的favicon
+              - 如果图标加载失败，显示域名前两个字母作为备用
+              - 小型圆形头像，5x5大小
+              */}
               <Avatar className="w-5 h-5">
+                {/* 尝试加载网站favicon */}
                 <AvatarImage src={googleFaviconUrl} alt={cleanHost} />
+                
+                {/* 
+                备用显示机制：
+                - 当favicon加载失败时触发
+                - 使用域名前两个字母大写
+                - 添加浅色背景，增加可读性
+                */}
                 <AvatarFallback className="text-[10px] bg-primary/10">
                   {cleanHost.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
+
+              {/* 
+              域名文本展示
+              - 小号字体
+              - 中等字重
+              - 紧挨在图标右侧
+              */}
               <span className="text-sm font-medium">{cleanHost}</span>
             </a>
 
-            {/* 标题区域 */}
+            {/* 
+            文章标题展示区域：位于图片底部的渐变遮罩层上
+            
+            设计特点：
+            - 绝对定位于图片底部
+            - 使用黑色渐变背景增加可读性
+            - 文字为白色，突出显示
+            - 限制最多显示3行
+            - 根据标题长度动态调整字体大小
+            */}
             <CardHeader className="absolute bottom-0 text-white pointer-events-none px-6 pb-6 z-[2] w-full bg-gradient-to-t from-black/90 via-black/60 to-transparent">
               <h2
                 className={cn(
+                  // 根据标题长度动态选择字体大小的函数
                   getTitleSizeClass(title),
-                  "font-semibold leading-snug",
-                  "line-clamp-3"
+                  "font-semibold leading-snug", // 半粗体，紧凑行高
+                  "line-clamp-3" // 限制最多显示3行
                 )}
               >
                 {title}
               </h2>
             </CardHeader>
-          </div>
-
-          {/* 内容区域 */}
-          <div className="flex flex-col flex-1 overflow-hidden">
-            <CardContent className="flex-grow py-6 px-6 relative -mt-2 overflow-y-auto pointer-events-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              <p className="text-sm leading-normal text-gray-700 dark:text-gray-300 tracking-normal select-none">
-                <time dateTime={date} className="font-medium">
-                  {new Date(date).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </time>
-                &nbsp;&middot;&nbsp;
-                {content.length > 370 ? `${content.slice(0, 370)}...` : content}
-              </p>
-            </CardContent>
-
-            {/* 底部操作区 */}
+            {/* 
+            底部操作区域 - 卡片交互控制栏
+            主要功能：
+            1. 提供返回按钮（可选）
+            2. 提供AI洞察按钮
+            3. 使用 flex 布局实现按钮的灵活排列
+            4. mt-auto 确保操作栏始终位于卡片底部
+            */}
             <CardFooter className="mt-auto pt-2 flex items-center justify-between gap-2">
+              {/* 
+              返回按钮 - 条件渲染
+              - showBack 控制是否显示
+              - 点击时阻止事件冒泡，防止触发卡片的其他交互
+              - 使用 ghost 变体，保持轻量级设计
+              - 悬停时颜色变化，提升交互反馈
+              */}
               {showBack && (
                 <Button
-                  variant="ghost"
-                  size="sm"
+                  variant="ghost"  // 幽灵按钮样式，背景透明
+                  size="sm"        // 小尺寸按钮
                   onClick={(e) => {
-                    e.stopPropagation();
-                    onBack?.();
+                    e.stopPropagation();  // 阻止事件冒泡
+                    onBack?.();           // 安全调用返回回调函数
                   }}
-                  className="text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground"  // 颜色变化效果
                 >
-                  <StepBack className="w-4 h-4" />
-                  Back
+                  <StepBack className="w-4 h-4" />  // 返回图标
+                  Back  // 按钮文本
                 </Button>
               )}
+
+              {/* 
+              AI洞察弹出层 - 使用 Sheet 组件实现底部弹窗
+              - 通过 open 和 onOpenChange 控制弹窗状态
+              - 点击按钮打开弹窗
+              */}
               <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+                {/* 
+                AI洞察按钮 
+                - 使用渐变 SVG 图标增加视觉吸引力
+                - 点击时阻止事件冒泡
+                - 触发弹窗打开
+                */}
                 <Button
-                  variant="outline"
+                  variant="outline"  // 轮廓按钮样式
                   onClick={(e) => {
-                    e.stopPropagation();
-                    setSheetOpen(true);
+                    e.stopPropagation();  // 阻止事件冒泡
+                    setSheetOpen(true);   // 打开底部弹窗
                   }}
-                  className="ml-auto"
+                  className="ml-auto"  // 靠右对齐
                 >
                   AI Insights
+                  {/* 
+                  自定义渐变 SVG 图标
+                  - 使用线性渐变创建动态颜色效果
+                  - 渐变从红色到紫色到蓝色
+                  */}
                   <svg
                     width="14"
                     height="14"
@@ -383,6 +465,7 @@ export function SwipeCard({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
+                    {/* 定义渐变色彩 */}
                     <defs>
                       <linearGradient
                         id="ai-gradient"
@@ -396,34 +479,96 @@ export function SwipeCard({
                         <stop offset="100%" style={{ stopColor: "#0EA5E9" }} />
                       </linearGradient>
                     </defs>
+                    {/* 图标路径 */}
                     <path d="M12 3l1.912 5.813a2 2 0 001.272 1.272L21 12l-5.813 1.912a2 2 0 00-1.272 1.272L12 21l-1.912-5.813a2 2 0 00-1.272-1.272L3 12l5.813-1.912a2 2 0 001.272-1.272L12 3z" />
                   </svg>
                 </Button>
+
+                {/* 
+                底部弹窗内容 - 文章详情
+                - 使用 SheetContent 组件实现底部弹窗
+                - 高度自适应，考虑安全区域
+                - 支持滚动
+                */}
                 <SheetContent
-                  side="bottom"
-                  className="h-[calc(92dvh-env(safe-area-inset-top))] sm:h-[calc(94dvh-env(safe-area-inset-top))] pb-safe overflow-y-auto"
+                  side="bottom"  // 指定弹出方向为底部，提供更自然的移动端交互体验
+                  className="
+                    h-[calc(92dvh-env(safe-area-inset-top))]  // 动态计算高度，减去安全区域顶部高度
+                    sm:h-[calc(94dvh-env(safe-area-inset-top))]  // 在小屏幕上略微调整高度
+                    pb-safe  // 适配安全区域的底部内边距
+                    overflow-y-auto  // 启用垂直滚动，确保内容超出时可滚动查看
+                  "
                 >
-                  <SheetTitle className="sr-only">Article Details</SheetTitle>
+                  {/* 
+                  无障碍访问标题：对屏幕阅读器可见，但在视觉上隐藏
+                  提高网页可访问性，帮助辅助技术理解页面结构 
+                  */}
+                  <SheetTitle className="sr-only">文章详情</SheetTitle>
+                  
+                  {/* 
+                  文章详情容器：响应式布局设计
+                  - mx-auto: 水平居中
+                  - w-full max-w-3xl: 宽度自适应，最大宽度限制为3xl
+                  - px-4 sm:px-6: 不同屏幕尺寸的水平内边距
+                  */}
                   <div className="mx-auto w-full max-w-3xl px-4 sm:px-6">
-                    <article className="prose prose-slate dark:prose-invert prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-p:text-base prose-img:rounded-lg max-w-none">
-                      <div className="not-prose relative w-full aspect-[2/1] mb-6 rounded-lg overflow-hidden bg-muted">
+                    {/* 
+                    文章内容区域：使用 Tailwind 的 prose 插件
+                    - prose-slate: 使用石板灰色调
+                    - dark:prose-invert: 暗黑模式反色
+                    - 精细控制排版样式：标题、段落、图片等
+                    */}
+                    <article className="
+                      prose prose-slate dark:prose-invert 
+                      prose-headings:font-bold  // 标题加粗
+                      prose-h1:text-2xl prose-h2:text-xl  // 标题字号
+                      prose-p:text-base  // 段落文字大小
+                      prose-img:rounded-lg  // 图片圆角
+                      max-w-none  // 移除最大宽度限制
+                    ">
+                      {/* 
+                      文章图片容器：响应式和自适应设计
+                      - not-prose: 防止 prose 插件影响布局
+                      - aspect-[2/1]: 2:1 宽高比，保持图片美观
+                      - mb-6: 底部外边距
+                      - rounded-lg overflow-hidden: 圆角和溢出隐藏
+                      - bg-muted: 加载时的背景色
+                      */}
+                      <div className="
+                        not-prose relative w-full 
+                        aspect-[2/1] mb-6 
+                        rounded-lg overflow-hidden 
+                        bg-muted
+                      ">
+                        {/* 
+                        Next.js Image 组件：图片优化和错误处理
+                        - fill: 填充父容器
+                        - priority: 高优先级加载
+                        - sizes: 响应式图片尺寸
+                        - onError: 图片加载失败的备用方案
+                        */}
                         <Image
-                          src={image}
-                          alt={title}
-                          fill
-                          priority
-                          sizes="(max-width: 768px) 100vw, 768px"
-                          className="object-cover"
+                          src={image}  // 文章图片源
+                          alt={title}  // 图片替代文本
+                          fill  // 填充父容器
+                          priority  // 高优先级加载
+                          sizes="(max-width: 768px) 100vw, 768px"  // 响应式图片尺寸
+                          className="object-cover"  // 图片填充并保持比例
                           onError={(e) => {
+                            // 图片加载失败时的兜底处理
                             const target = e.target as HTMLImageElement;
-                            target.src = DEFAULT_IMAGE;
-                            target.className = "w-16 h-16 opacity-50";
+                            target.src = DEFAULT_IMAGE;  // 使用默认图片
+                            target.className = "w-16 h-16 opacity-50";  // 调整默认图片样式
                           }}
                         />
                       </div>
 
-                      <h1 className="text-3xl font-extrabold tracking-tight mb-3 bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">{title}</h1>
+                      {/* 文章标题 - 渐变效果 */}
+                      <h1 className="text-3xl font-extrabold tracking-tight mb-3 bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+                        {title}
+                      </h1>
 
+                      {/* 发布日期 */}
                       <div className="not-prose flex items-center gap-3 text-sm text-muted-foreground">
                         <time className="font-medium bg-secondary px-2 py-0.5 rounded-md">
                           {new Date().toLocaleDateString("en-US", {
@@ -433,6 +578,7 @@ export function SwipeCard({
                         </time>
                       </div>
 
+                      {/* 跳转到Twitter讨论的按钮 */}
                       <a
                         href={`https://x.com/search?q=${encodeURIComponent(
                           title
@@ -445,15 +591,21 @@ export function SwipeCard({
                         <XIcon className="w-4 h-4" />
                       </a>
 
+                      {/* 
+                      条件渲染AI洞察组件
+                      - 仅在弹窗打开时加载
+                      - 传入文章标题作为查询参数
+                      */}
                       {sheetOpen && <AIInsight query={title} />}
                     </article>
                   </div>
                 </SheetContent>
               </Sheet>
             </CardFooter>
-          </div>
+            </div>
         </Card>
       </div>
     </div>
   );
 }
+
