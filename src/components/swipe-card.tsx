@@ -414,8 +414,8 @@ export function SwipeCard({
 
          {/* 内容区域 */}
          <div className="flex flex-col flex-1 overflow-hidden">
-            <CardContent className="flex-grow py-6 px-6 relative -mt-2 overflow-y-auto pointer-events-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 tracking-wide select-none font-noto-sans-sc">
+            <CardContent className="flex-grow py-6 px-6 relative -mt-2 overflow-y-auto">
+              <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 tracking-wide select-none font-noto-sans-sc max-h-[180px] overflow-y-auto pr-2">
                 <time dateTime={date} className="font-medium">
                   {(() => {
                     // 将日期字符串转换为Date对象
