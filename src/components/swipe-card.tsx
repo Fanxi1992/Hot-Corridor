@@ -18,7 +18,7 @@ import { useSwipeable, SwipeEventData } from "react-swipeable";
 // useState: 管理组件内部状态
 // useEffect: 处理副作用操作
 // useCallback: 优化函数引用，减少不必要的重渲染
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 // 导入Next.js的图片组件，提供自动优化和懒加载的图片渲染
 import Image from "next/image";
@@ -114,6 +114,12 @@ export function SwipeCard({
   // rotate: 旋转角度，增加滑动的自然感
   const [transform, setTransform] = useState({ x: 0, scale: 1, rotate: 0 }); 
 
+  // 添加一个ref来引用CardContent
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // 添加一个状态来追踪滑动是否应该被禁用
+  const [disableSwipe, setDisableSwipe] = useState(false);
+
   // handleSwipe：处理卡片滑动的核心函数
   // 1. 计算屏幕宽度，确定滑出方向
   // 2. 设置exitX，触发滑出动画
@@ -131,39 +137,43 @@ export function SwipeCard({
   // 配置滑动手势处理器，使用react-swipeable库
   // 提供丰富的手势交互能力
   const handlers = useSwipeable({
-    // onSwiping：实时跟踪滑动过程
-    // 仅在顶部卡片（isTop）上生效
-    onSwiping: (e: SwipeEventData) => {
-      // 非顶部卡片不响应滑动
+    // 在滑动开始时检查是否应该禁用滑动
+    onTouchStartOrOnMouseDown: (e) => {
       if (!isTop) return;
+
+      const target = e.event.target as HTMLElement;
+      const contentElement = contentRef.current;
       
-      // 获取水平滑动距离
+      if (contentElement) {
+        const isInContent = contentElement.contains(target);
+        const hasScroll = contentElement.scrollHeight > contentElement.clientHeight;
+        
+        // 设置是否禁用滑动的状态
+        if (isInContent && hasScroll) {
+          return false; // 阻止滑动
+        }
+      }
+    },
+
+    onSwiping: (e: SwipeEventData) => {
+      // 如果滑动被禁用或不是顶部卡片，直接返回
+      if (!isTop || disableSwipe) return;
+      
       const deltaX = e.deltaX;
       const absX = Math.abs(deltaX);
-      
-      // 动态计算缩放效果
-      // 随着滑动距离增加，卡片逐渐缩小
-      // 最小缩放到0.8，保持一定的视觉存在
       const scale = Math.max(0.8, 1 - absX / 1000);
+      const rotate = (deltaX / 200) * 15;
       
-      // 计算旋转角度
-      // 根据滑动方向和距离，最大旋转15度
-      // 增加滑动的自然和趣味感
-      const rotate = (deltaX / 200) * 15; 
-      
-      // 更新transform状态
-      // 实时反馈用户的滑动交互
       setTransform({
-        x: deltaX,        // 水平位移
-        scale,            // 缩放比例
-        rotate,           // 旋转角度
+        x: deltaX,
+        scale,
+        rotate,
       });
     },
 
-    // onSwiped：滑动结束时的处理逻辑
     onSwiped: (e: SwipeEventData) => {
-      // 非顶部卡片不响应
-      if (!isTop) return;
+      // 如果滑动被禁用或不是顶部卡片，直接返回
+      if (!isTop || disableSwipe) return;
       
       // 定义滑动阈值和判定参数
       const threshold = 0.4;        // 触发滑动的阈值比例
@@ -194,11 +204,15 @@ export function SwipeCard({
       }
     },
 
-    // 配置手势追踪选项
-    trackMouse: true,        // 支持鼠标滑动
-    trackTouch: true,        // 支持触摸滑动
-    preventScrollOnSwipe: true, // 滑动时阻止页面滚动
-    delta: 10,               // 触发滑动的最小距离
+    // 在触摸或鼠标事件结束时重置禁用状态
+    onTouchEndOrOnMouseUp: () => {
+      setDisableSwipe(false);
+    },
+
+    trackMouse: true,
+    trackTouch: true,
+    preventScrollOnSwipe: true,
+    delta: 10,
   });
   // 键盘快捷键处理：为顶部卡片添加快速交互的键盘控制逻辑
   useEffect(() => {
@@ -282,7 +296,7 @@ export function SwipeCard({
     
     <div
       style={cardStyle}
-      {...(isTop ? handlers : {})}
+      {...(isTop && !disableSwipe ? handlers : {})}
       aria-label="新闻卡片"
       role="article"
     >
@@ -414,7 +428,10 @@ export function SwipeCard({
 
          {/* 内容区域 */}
          <div className="flex flex-col flex-1 overflow-hidden">
-            <CardContent className="flex-grow py-6 px-6 relative -mt-2 overflow-y-auto">
+            <CardContent 
+              ref={contentRef}
+              className="flex-grow py-6 px-6 relative -mt-2 overflow-y-auto"
+            >
               <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 tracking-wide select-none font-noto-sans-sc max-h-[180px] overflow-y-auto pr-2">
                 <time dateTime={date} className="font-medium">
                   {(() => {
