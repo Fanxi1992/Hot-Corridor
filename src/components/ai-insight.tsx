@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { marked } from "marked";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -17,11 +17,53 @@ export function AIInsight({ query, content }: AIInsightProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // 添加一个 ref 来引用内容容器
+  const contentRef = useRef<HTMLDivElement>(null);
+  // 添加一个 ref 来追踪是否用户手动滚动
+  const userScrollRef = useRef(false);
+  // 添加一个 ref 来存储上一次的内容长度
+  const lastContentLengthRef = useRef(0);
+
+  // 添加滚动处理函数
+  const handleScroll = () => {
+    if (!contentRef.current) return;
+    
+    const { scrollHeight, scrollTop, clientHeight } = contentRef.current;
+    // 如果用户向上滚动，标记为手动滚动
+    if (scrollHeight - scrollTop - clientHeight > 100) {
+      userScrollRef.current = true;
+    }
+    // 如果用户滚动到底部附近，重置手动滚动标记
+    if (scrollHeight - scrollTop - clientHeight < 50) {
+      userScrollRef.current = false;
+    }
+  };
+
+  // 添加自动滚动函数
+  const scrollToBottom = () => {
+    if (!contentRef.current || userScrollRef.current) return;
+    
+    contentRef.current.scrollTo({
+      top: contentRef.current.scrollHeight,
+      behavior: 'smooth'
+    });
+  };
+
+  // 监听内容变化
+  useEffect(() => {
+    if (streamContent.length > lastContentLengthRef.current) {
+      scrollToBottom();
+      lastContentLengthRef.current = streamContent.length;
+    }
+  }, [streamContent]);
+
   useEffect(() => {
     // 重置状态
     setStreamContent('');
     setIsLoading(true);
     setError(null);
+    userScrollRef.current = false;
+    lastContentLengthRef.current = 0;
 
     async function fetchAIInsights() {
       try {
@@ -111,10 +153,12 @@ export function AIInsight({ query, content }: AIInsightProps) {
     );
   }
 
-  // 渲染流式内容
+  // 修改渲染部分，添加 ref 和滚动事件监听
   return (
     <div 
-      className="ai-insight-content mt-6" 
+      ref={contentRef}
+      className="ai-insight-content mt-6 max-h-[400px] overflow-y-auto scroll-smooth" 
+      onScroll={handleScroll}
       dangerouslySetInnerHTML={{ __html: marked(streamContent) }}
     />
   );
