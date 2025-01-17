@@ -3,10 +3,12 @@ import type { NextConfig } from "next";
 const config: NextConfig = {
   images: {
     dangerouslyAllowSVG: true,
+    domains: ['pbs.twimg.com'], // 添加 Twitter 图片域名
     remotePatterns: [
       {
         protocol: 'https',
         hostname: '*',
+        pathname: '*',
       },
     ],
   },

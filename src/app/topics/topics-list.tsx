@@ -4,15 +4,16 @@ import { useState, useEffect } from "react";
 import { CircleCheck, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const TOPICS = [
-  "General",
-  "Business",
-  "Entertainment",
-  "Health",
-  "Science",
-  "Sports",
-  "Technology",
-];
+const TOPICS_MAPPING: { [key: string]: string } = {
+  "比特/以太": "BTCETH",
+  "二级分析": "erjifenxi",
+  "一级/撸毛": "yijilumao",
+  "链上/挖矿": "lianshangwakuang",
+  "pump/meme": "pumpmeme",
+  "其他": "universe"
+};
+
+const TOPICS = Object.keys(TOPICS_MAPPING);
 
 const COOKIE_NAME = "followedTopics";
 const COOKIE_MAX_AGE = 31536000; // 1 year in seconds
@@ -25,8 +26,13 @@ const TopicsList = () => {
     const cookies = document.cookie.split("; ");
     const followedTopicsCookie = cookies.find((cookie) => cookie.startsWith(`${COOKIE_NAME}=`));
     if (followedTopicsCookie) {
-      const topics = JSON.parse(decodeURIComponent(followedTopicsCookie.split("=")[1]));
-      setFollowedTopics(new Set(topics));
+      const mappedTopics = JSON.parse(decodeURIComponent(followedTopicsCookie.split("=")[1]));
+      // 将英文参数转换回中文主题
+      const reverseMappings = Object.fromEntries(
+        Object.entries(TOPICS_MAPPING).map(([k, v]) => [v, k])
+      );
+      const chineseTopics = mappedTopics.map((t: string) => reverseMappings[t]);
+      setFollowedTopics(new Set(chineseTopics));
     }
   }, []);
 
@@ -40,9 +46,12 @@ const TopicsList = () => {
         newTopics.add(topic);
       }
       
-      // Save to cookies
+      // 将中文主题转换为英文参数后再存储到 cookie
+      const topicsArray = Array.from(newTopics);
+      const mappedTopics = topicsArray.map(t => TOPICS_MAPPING[t]);
+      
       document.cookie = `${COOKIE_NAME}=${encodeURIComponent(
-        JSON.stringify(Array.from(newTopics))
+        JSON.stringify(mappedTopics)
       )}; path=/; max-age=${COOKIE_MAX_AGE}`;
       
       return newTopics;

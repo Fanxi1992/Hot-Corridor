@@ -38,8 +38,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 
 // 定义应用分享的基础 URL 和文案
 // 这些常量用于社交媒体分享功能
-const SHARE_URL = 'https://epigram.news';
-const SHARE_TEXT = "Epigram - An open-source, free, and AI-powered news in short app.";
+const SHARE_URL = 'https://hodler.news';
+const SHARE_TEXT = "Hodler - 一个免费的，AI驱动的，新闻聚合器。";
 
 // 定义社交媒体分享配置
 // 包含每个平台的分享链接生成规则、图标和颜色样式
@@ -118,13 +118,10 @@ const AppSwitcher: React.FC = () => {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <LogoIcon className="w-5 h-5" />
-                    <h3 className="font-semibold">Welcome to Epigram!</h3>
+                    <h3 className="font-semibold">欢迎使用Hodler!</h3>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Your open-source, AI-powered news companion that redefines
-                    how you consume news. Get bite-sized summaries from trusted
-                    sources worldwide, personalized to your interests. Stay
-                    informed without the overwhelm.
+                  An AI-powered hotspot aggregator for crypto retail investors. Stay ahead with real-time updates on KOL opinions and crypto opportunities. Offering balanced and trustworthy insights, it’s designed for fast-paced lifestyles with a sleek, user-friendly interface and exceptional user experience.
                   </p>
                   <div className="flex items-center gap-2 text-sm">
                     <button

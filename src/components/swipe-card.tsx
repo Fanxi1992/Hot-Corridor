@@ -52,7 +52,7 @@ interface SwipeCardProps {
   onSwipe: (direction: "left" | "right") => void;  // 滑动回调函数，处理用户滑动卡片的交互
   date: string;           // 文章发布日期，展示文章的时间信息
   image?: string;         // 新闻配图URL，可选，用于增强视觉吸引力
-  favicon?: string;       // 新闻源网站图标URL，可选，标识文章来源
+  favicon?: string;       // 网站图标URL
   url: string;           // 原文链接，允许用户跳转到完整文章
   isTop?: boolean;       // 标记是否为顶部卡片，控制交互和动画效果
   onBack?: () => void;   // 返回/撤销操作的回调函数
@@ -73,12 +73,24 @@ function getTitleSizeClass(title: string): string {
 // 定义默认图片路径
 const DEFAULT_IMAGE = '/static/images/default.png';
 
+// 提取 KOL 名字的函数
+const extractKolName = (url: string): string => {
+  try {
+    // 尝试从 URL 中提取用户名
+    const match = url.match(/x\.com\/([^/?#]+)/);
+    return match ? match[1] : 'default'; // 如果无法提取，则回退到使用 cleanHost
+  } catch {
+    return 'default'; // 出错时返回 cleanHost 作为后备
+  }
+};
+
 // 导出SwipeCard组件，处理新闻卡片的交互和渲染
 export function SwipeCard({
   title,
   content,
   date,
   image = DEFAULT_IMAGE,
+  favicon,
   url,
   onSwipe,
   onBack,
@@ -238,11 +250,6 @@ export function SwipeCard({
   // 例如：将 "www.example.com" 转换为 "example.com"
   const cleanHost = host.replace(/^www\./, "");
 
-  // 使用Google的favicon服务获取网站图标
-  // 通过域名动态生成网站的favicon图标URL
-  // sz=64 参数指定图标大小为64像素
-  const googleFaviconUrl = `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
-
   // 定义卡片动态样式：控制卡片的变换效果
   const cardStyle = {
     // 3D平移变换：根据滑动状态控制卡片位置
@@ -354,12 +361,15 @@ export function SwipeCard({
               - 小型圆形头像，5x5大小
               */}
               <Avatar className="w-5 h-5">
-                {/* 尝试加载网站favicon */}
-                <AvatarImage src={googleFaviconUrl} alt={cleanHost} />
+                {/* 使用传入的 favicon 替代 googleFaviconUrl */}
+                <AvatarImage 
+                  src={favicon} 
+                  alt={cleanHost}
+                />
                 
                 {/* 
                 备用显示机制：
-                - 当favicon加载失败时触发
+                - 当favicon未提供或加载失败时触发
                 - 使用域名前两个字母大写
                 - 添加浅色背景，增加可读性
                 */}
@@ -374,7 +384,9 @@ export function SwipeCard({
               - 中等字重
               - 紧挨在图标右侧
               */}
-              <span className="text-sm font-medium">{cleanHost}</span>
+              <span className="text-sm font-medium">
+                {extractKolName(url)}
+              </span>
             </a>
 
             {/* 
@@ -426,7 +438,7 @@ export function SwipeCard({
                   className="text-muted-foreground hover:text-foreground"  // 颜色变化效果
                 >
                   <StepBack className="w-4 h-4" />  // 返回图标
-                  Back  // 按钮文本
+                  后退  // 按钮文本
                 </Button>
               )}
 
