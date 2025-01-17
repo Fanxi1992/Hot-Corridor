@@ -281,12 +281,14 @@ export function SwipeCard({
     // style={cardStyle}：动态设置卡片的变换效果，包括位移、缩放和旋转
     // handlers：仅在顶部卡片时启用滑动手势处理
     // aria-label和role：提高组件的无障碍性
+    
     <div
       style={cardStyle}
       {...(isTop ? handlers : {})}
       aria-label="新闻卡片"
       role="article"
     >
+      
       {/* 内部容器：确保卡片填充整个父元素 */}
       <div className="w-full h-full">
         {/* Card组件：提供卡片的基本样式和布局 */}
@@ -299,6 +301,7 @@ export function SwipeCard({
             {/* fill属性：图片填充整个容器 */}
             {/* priority：标记为高优先级加载 */}
             {/* sizes：响应式图片大小 */}
+            
             <Image
               src={image}
               alt={title}
@@ -306,20 +309,17 @@ export function SwipeCard({
               priority
               sizes="(max-width: 400px) 100vw"
               className="object-cover z-0"
-              // 图片加载错误时的处理：使用默认图片
-              // e 是 React 的合成事件对象，表示图片加载错误的事件
-              // HTMLImageElement 是 DOM 中图片元素的类型，用于类型转换
+              loading="eager"
+              unoptimized={image.includes('twimg.com')} // Twitter 图片跳过优化
               onError={(e) => {
-                // e.target 指向触发事件的 DOM 元素（在这里是 <img> 标签）
-                // 使用类型断言将 e.target 转换为 HTMLImageElement 类型
-                // 这样可以安全地访问和修改图片元素的属性
                 const target = e.target as HTMLImageElement;
-                
-                // 当图片加载失败时，将图片源替换为默认图片
-                target.src = DEFAULT_IMAGE;
-                
-                // 修改图片的 CSS 类，调整默认图片的大小和透明度
-                target.className = "w-16 h-16 opacity-50";
+                // 如果是 Twitter 图片加载失败，尝试直接使用原始 URL
+                if (image.includes('twimg.com')) {
+                  target.src = image;
+                } else {
+                  target.src = DEFAULT_IMAGE;
+                  target.className = "w-16 h-16 opacity-50";
+                }
               }}
             />
 

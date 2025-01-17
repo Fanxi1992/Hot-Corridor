@@ -211,7 +211,7 @@ export default function NewsFeed({ newsArticles }: { newsArticles: NewsArticle[]
             cards.slice(0, 3).map((card, index) => (
               // 每张卡片的容器：使用绝对定位实现堆叠效果
               <div
-                key={card.id}
+                key={card.title}
                 className="absolute inset-0"
                 style={{
                   // 垂直方向微小偏移，创造层叠视觉效果

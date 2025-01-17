@@ -62,6 +62,8 @@ export async function GET(req: NextRequest) {
     // 将分类字符串转换为数组
     const categoryList = categories.split(',');
 
+    // console.log(categoryList);
+
     // 存储所有新闻文章的数组
     const newsArticles: NewsArticle[] = [];
     // 遍历每个请求的新闻分类，从Redis缓存中获取新闻文章
