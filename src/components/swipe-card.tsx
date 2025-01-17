@@ -417,11 +417,11 @@ export function SwipeCard({
          {/* 内容区域 */}
          <div className="flex flex-col flex-1 overflow-hidden">
             <CardContent className="flex-grow py-6 px-6 relative -mt-2 overflow-y-auto pointer-events-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              <p className="text-sm leading-normal text-gray-700 dark:text-gray-300 tracking-normal select-none">
+              <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 tracking-wide select-none font-noto-sans-sc">
                 <time dateTime={date} className="font-medium">
                   {(() => {
                     // 将日期字符串转换为Date对象
-                    // 格式: "202501132205" -> "2025-01-13 22:05"
+                    // 格式: "202501132205" -> "2025-01-13 22:05" 
                     const year = date.slice(0,4);
                     const month = date.slice(4,6);
                     const day = date.slice(6,8);
