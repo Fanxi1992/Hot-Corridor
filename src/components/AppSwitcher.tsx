@@ -13,7 +13,9 @@ import {
   Twitter, Linkedin, Facebook, MessageCircle,
   Github, X, Search,
   TreePalm,
-  Flower2
+  Flower2,
+  Mic,
+  Loader2
 } from 'lucide-react';
 
 // 导入自定义组件和图标
@@ -65,6 +67,54 @@ const SOCIAL_CONFIGS = [
   // ... 其他社交平台配置
 ] as const; // 使用 const 断言，确保类型推断的精确性
 
+// 在文件顶部添加以下类型声明
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionResultList {
+  readonly length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  readonly length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+  isFinal: boolean;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onend: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onerror: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
+  onstart: ((this: SpeechRecognition, ev: Event) => any) | null;
+  start(): void;
+  stop(): void;
+}
+
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognition;
+}
+
+// 扩展 Window 接口
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+    speechRecognition?: SpeechRecognition;
+  }
+}
+
 const AppSwitcher: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
@@ -74,6 +124,10 @@ const AppSwitcher: React.FC = () => {
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isVoiceDialogOpen, setIsVoiceDialogOpen] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [transcript, setTranscript] = useState('');
 
   useEffect(() => {
     // Check if user has dismissed the welcome card before
@@ -95,6 +149,67 @@ const AppSwitcher: React.FC = () => {
     })), 
     []
   );
+
+  const handleStartRecording = () => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognitionAPI = window.webkitSpeechRecognition || window.SpeechRecognition;
+      if (SpeechRecognitionAPI) {
+        const recognition = new SpeechRecognitionAPI();
+        window.speechRecognition = recognition;
+        recognition.lang = 'zh-CN';
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        recognition.onstart = () => {
+          setIsRecording(true);
+        };
+
+        recognition.onresult = (event: SpeechRecognitionEvent) => {
+          const transcript = Array.from(event.results)
+            .map(result => result[0])
+            .map(result => result.transcript)
+            .join('');
+          setTranscript(transcript);
+        };
+
+        recognition.onend = async () => {
+          setIsRecording(false);
+          if (transcript.length > 5) {
+            setIsProcessing(true);
+            try {
+              const response = await fetch('/api/process-voice', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ query: transcript }),
+              });
+              if (response.ok) {
+                // 处理响应，更新卡片状态
+                const data = await response.json();
+                // TODO: 更新卡片状态的逻辑
+              }
+            } catch (error) {
+              console.error('处理语音输入时出错:', error);
+            } finally {
+              setIsProcessing(false);
+              setIsVoiceDialogOpen(false);
+              setTranscript('');
+            }
+          }
+        };
+
+        recognition.start();
+      }
+    } else {
+      alert('您的浏览器不支持语音识别功能');
+    }
+  };
+
+  const handleStopRecording = () => {
+    setIsRecording(false);
+    window.speechRecognition?.stop();
+  };
 
   return (
     <>
@@ -130,14 +245,15 @@ const AppSwitcher: React.FC = () => {
                     >
                       Get Started
                     </button>
-                    <Link href="/about">
-                      <button
-                        onClick={dismissWelcome}
-                        className="flex-1 py-1 px-3 bg-secondary text-secondary-foreground rounded-full hover:opacity-90 transition-opacity whitespace-nowrap"
-                      >
-                        About Epigram
-                      </button>
-                    </Link>
+                    <a
+                      href="http://59aichat.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={dismissWelcome}
+                      className="flex-1 py-1 px-3 bg-secondary text-secondary-foreground rounded-full hover:opacity-90 transition-opacity whitespace-nowrap text-center"
+                    >
+                      About Hodler
+                    </a>
                   </div>
                 </div>
               </Card>
@@ -183,6 +299,21 @@ const AppSwitcher: React.FC = () => {
                 <span className="font-medium text-sm">Topics</span>
               </button>
             </Link>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setIsVoiceDialogOpen(true)}
+                    className="p-1.5 hover:bg-gray-100 dark:hover:bg-muted rounded-full transition-colors"
+                    aria-label="语音输入"
+                  >
+                    <Mic className="w-5 h-5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">语音输入</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
             <TooltipProvider>
               <Tooltip>
@@ -406,72 +537,6 @@ const AppSwitcher: React.FC = () => {
               </Tooltip>
             </TooltipProvider>
 
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-muted rounded-full transition-colors"
-                        aria-label="More options"
-                      >
-                        <Menu className="w-5 h-5" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="w-56"
-                      role="menu"
-                      aria-label="More options"
-                    >
-                      <Link href="/about">
-                        <DropdownMenuItem
-                          className={cn(
-                            "h-9 focus:bg-accent cursor-pointer",
-                            isAboutPage && "bg-accent"
-                          )}
-                        >
-                          <Info className="mr-2 h-4 w-4" aria-hidden="true" />
-                          <span className="flex-1">About</span>
-                          {isAboutPage && (
-                            <Check className="h-4 w-4" aria-hidden="true" />
-                          )}
-                        </DropdownMenuItem>
-                      </Link>
-                      <a
-                        href="https://github.com/panda-sandeep/epigram"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <DropdownMenuItem className="h-9 focus:bg-accent cursor-pointer">
-                          <Github className="mr-2 h-4 w-4" aria-hidden="true" />
-                          <span className="flex-1">Contribute and fork</span>
-                        </DropdownMenuItem>
-                      </a>
-                      <DropdownMenuItem
-                        className="h-9 focus:bg-accent cursor-pointer"
-                        onClick={() => setIsShareOpen(true)}
-                      >
-                        <Share2 className="mr-2 h-4 w-4" aria-hidden="true" />
-                        <span className="flex-1">Share Epigram</span>
-                      </DropdownMenuItem>
-                      <div className="h-px bg-border my-1" />
-                      <div className="px-2 py-3 space-y-1">
-                        <div className="text-xs text-center text-muted-foreground">
-                          Built by humans, optimized by AI, with ❤️ from SF.
-                        </div>
-                        <div className="text-[10px] text-center text-muted-foreground/60">
-                          © {new Date().getFullYear()} Epigram
-                        </div>
-                      </div>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>More options</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </div>
         </nav>
       </div>
@@ -480,9 +545,9 @@ const AppSwitcher: React.FC = () => {
         <DrawerContent>
           <div className="mx-auto max-w-lg w-full">
             <DrawerHeader>
-              <DrawerTitle className="text-center">Share Epigram</DrawerTitle>
+              <DrawerTitle className="text-center">Share Hodler</DrawerTitle>
               <DrawerDescription className="text-center">
-                Share Epigram with your friends and colleagues
+                Share Hodler with your friends and colleagues
               </DrawerDescription>
             </DrawerHeader>
             <div className="flex justify-center gap-4 p-4">
@@ -515,7 +580,7 @@ const AppSwitcher: React.FC = () => {
           <div className="p-6 space-y-6">
             <DialogHeader>
               <DialogTitle className="text-2xl font-semibold tracking-tight">
-                Search Epigram
+                Search Hodler
               </DialogTitle>
             </DialogHeader>
             <div className="relative">
@@ -530,6 +595,52 @@ const AppSwitcher: React.FC = () => {
                 ⏎
               </div>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isVoiceDialogOpen} onOpenChange={setIsVoiceDialogOpen}>
+        <DialogContent className="sm:max-w-[400px] flex flex-col items-center">
+          <DialogHeader>
+            <DialogTitle>语音输入</DialogTitle>
+          </DialogHeader>
+          <div className="w-full flex flex-col items-center gap-4 py-8">
+            {isProcessing ? (
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <p className="text-sm text-muted-foreground">正在处理您的语音...</p>
+              </div>
+            ) : (
+              <>
+                <button
+                  onMouseDown={handleStartRecording}
+                  onMouseUp={handleStopRecording}
+                  onTouchStart={handleStartRecording}
+                  onTouchEnd={handleStopRecording}
+                  className={cn(
+                    "w-20 h-20 rounded-full flex items-center justify-center transition-all",
+                    isRecording
+                      ? "bg-red-500 scale-110"
+                      : "bg-primary hover:bg-primary/90"
+                  )}
+                >
+                  <Mic className={cn(
+                    "w-8 h-8",
+                    isRecording ? "text-white animate-pulse" : "text-primary-foreground"
+                  )} />
+                </button>
+                <p className="text-sm text-muted-foreground">
+                  {isRecording ? "松开结束录音" : "按住说话"}
+                </p>
+                {transcript && (
+                  <div className="w-full max-w-[300px] mt-4">
+                    <p className="text-sm text-center break-words">
+                      {transcript}
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>
