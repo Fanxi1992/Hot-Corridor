@@ -47,16 +47,16 @@ import { XIcon } from "@/components/icons/x-icon";
 // 定义SwipeCard组件的属性接口
 // 详细描述了渲染一张新闻卡片所需的所有数据
 interface SwipeCardProps {
-  title: string;           // 新闻标题，决定卡片的主要文字内容
-  content: string;         // 新闻摘要，提供文章的简要描述
-  onSwipe: (direction: "left" | "right") => void;  // 滑动回调函数，处理用户滑动卡片的交互
-  date: string;           // 文章发布日期，展示文章的时间信息
-  image?: string;         // 新闻配图URL，可选，用于增强视觉吸引力
-  favicon?: string;       // 网站图标URL
-  url: string;           // 原文链接，允许用户跳转到完整文章
-  isTop?: boolean;       // 标记是否为顶部卡片，控制交互和动画效果
-  onBack?: () => void;   // 返回/撤销操作的回调函数
-  showBack?: boolean;    // 控制是否显示返回/撤销按钮
+  title: string;           // title 现在不仅是显示用，也是标识用
+  content: string;
+  onSwipe: (title: string) => void;  // 修改这里，参数类型从 id 改为 title
+  date: string;
+  image?: string;
+  favicon?: string;
+  url: string;
+  isTop?: boolean;
+  onBack?: () => void;
+  showBack?: boolean;
 }
 
 // 根据标题长度返回对应的字体大小类名，这些标题名字我想后面可以通过max_token来限制大模型生成
@@ -125,10 +125,8 @@ export function SwipeCard({
     // 根据滑动方向设置exitX
     // 向右滑：正值，向左滑：负值
     setExitX(direction === "right" ? screenWidth : -screenWidth);
-    
-    // 调用父组件传入的滑动处理函数
-    onSwipe(direction);
-  }, [onSwipe]);
+    onSwipe(title);  // 直接传入 title 作为标识
+  }, [onSwipe, title]);
 
   // 配置滑动手势处理器，使用react-swipeable库
   // 提供丰富的手势交互能力

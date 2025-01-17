@@ -165,7 +165,7 @@ const AppSwitcher: React.FC = () => {
               aria-current={isHomePage ? "page" : undefined}
             >
               <LogoIcon className="w-5 h-5" />
-              <span className="font-medium text-sm">Epigram</span>
+              <span className="font-medium text-sm">HODLer</span>
             </a>
 
             <Link href="/topics">

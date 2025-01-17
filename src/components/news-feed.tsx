@@ -70,32 +70,20 @@ export default function NewsFeed({ newsArticles }: { newsArticles: NewsArticle[]
    * 4. 触发操作提示的淡出动画
    * 5. 在动画结束后隐藏提示并记录用户已见过提示
    */
-  const handleSwipe = (id: string) => {
-    // 步骤1：使用find方法精确查找被滑动的卡片
-    // 通过传入的id在cards数组中匹配对应的新闻卡片
-    // 如果找到，将完整的卡片对象赋值给dismissedCard
-    const dismissedCard = cards.find(card => card.id === id);
+  const handleSwipe = (title: string) => {
+    // 使用 title 查找要移除的卡片
+    const dismissedCard = cards.find(card => card.title === title);
 
-    // 步骤2：使用filter方法从当前卡片列表中移除被滑动的卡片
-    // 保留所有id不等于传入id的卡片，实现移除目标卡片
-    // 使用setCards更新状态，触发React重新渲染
-    setCards((cards) => cards.filter((card) => card.id !== id));
+    // 使用 title 过滤卡片
+    setCards((cards) => cards.filter((card) => card.title !== title));
 
-    // 步骤3：将被移除的卡片添加到已划走卡片的历史记录
-    // 使用条件判断确保只有成功找到卡片才执行添加操作
-    // 使用展开运算符将新卡片插入dismissedCards数组的开头
+    // 其余逻辑保持不变
     if (dismissedCard) {
       setDismissedCards(prev => [dismissedCard, ...prev]);
     }
 
-    // 步骤4：触发操作提示的淡出动画
-    // 将isFading状态设置为true，激活CSS过渡效果
     setIsFading(true);
 
-    // 步骤5：使用setTimeout管理提示的隐藏和本地存储记录
-    // 500毫秒后执行回调函数，与CSS动画时间同步
-    // 1. 隐藏提示
-    // 2. 在localStorage中记录用户已看过提示，防止重复显示
     setTimeout(() => {
       setShowTip(false);
       localStorage.setItem('hasSeenSwipeTip', 'true');
@@ -252,7 +240,7 @@ export default function NewsFeed({ newsArticles }: { newsArticles: NewsArticle[]
                   favicon={card.favicon}
                   url={card.url}
                   isTop={index === 0}
-                  onSwipe={() => handleSwipe(card.id)}
+                  onSwipe={() => handleSwipe(card.title)}
                   onBack={handleUndo}
                   showBack={index === 0 && dismissedCards.length > 0}
                 />
