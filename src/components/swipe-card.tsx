@@ -585,14 +585,7 @@ export function SwipeCard({
                     - dark:prose-invert: 暗黑模式反色
                     - 精细控制排版样式：标题、段落、图片等
                     */}
-                    <article className="
-                      prose prose-slate dark:prose-invert 
-                      prose-headings:font-bold  // 标题加粗
-                      prose-h1:text-2xl prose-h2:text-xl  // 标题字号
-                      prose-p:text-base  // 段落文字大小
-                      prose-img:rounded-lg  // 图片圆角
-                      max-w-none  // 移除最大宽度限制
-                    ">
+                    <article className="prose prose-slate dark:prose-invert prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-p:text-base prose-img:rounded-lg max-w-none">
                       {/* 
                       文章图片容器：响应式和自适应设计
                       - not-prose: 防止 prose 插件影响布局
@@ -601,32 +594,21 @@ export function SwipeCard({
                       - rounded-lg overflow-hidden: 圆角和溢出隐藏
                       - bg-muted: 加载时的背景色
                       */}
-                      <div className="
-                        not-prose relative w-full 
-                        aspect-[2/1] mb-6 
-                        rounded-lg overflow-hidden 
-                        bg-muted
-                      ">
-                        {/* 
-                        Next.js Image 组件：图片优化和错误处理
-                        - fill: 填充父容器
-                        - priority: 高优先级加载
-                        - sizes: 响应式图片尺寸
-                        - onError: 图片加载失败的备用方案
-                        */}
+                      <div className="not-prose relative w-full aspect-[2/1] mb-6 rounded-lg overflow-hidden bg-muted">
                         <Image
-                          src={image}  // 文章图片源
-                          alt={title}  // 图片替代文本
-                          fill  // 填充父容器
-                          priority  // 高优先级加载
-                          sizes="(max-width: 768px) 100vw, 768px"  // 响应式图片尺寸
-                          className="object-cover"  // 图片填充并保持比例
+                          src={image || DEFAULT_IMAGE}  // 确保有默认图片
+                          alt={title}
+                          fill
+                          priority
+                          quality={75}  // 添加质量参数
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"  // 优化响应式尺寸
+                          className="object-cover"
                           onError={(e) => {
-                            // 图片加载失败时的兜底处理
                             const target = e.target as HTMLImageElement;
-                            target.src = DEFAULT_IMAGE;  // 使用默认图片
-                            target.className = "w-16 h-16 opacity-50";  // 调整默认图片样式
+                            target.src = DEFAULT_IMAGE;
+                            target.className = "w-16 h-16 opacity-50";
                           }}
+                          unoptimized={image.includes('twimg.com')} // Twitter 图片跳过优化
                         />
                       </div>
 
@@ -638,25 +620,26 @@ export function SwipeCard({
                       {/* 发布日期 */}
                       <div className="not-prose flex items-center gap-3 text-sm text-muted-foreground">
                         <time className="font-medium bg-secondary px-2 py-0.5 rounded-md">
-                          {new Date().toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                          })}
+                          {(() => {
+                            const year = date.slice(0,4);
+                            const month = date.slice(4,6);
+                            const day = date.slice(6,8);
+                            const hour = date.slice(8,10);
+                            const minute = date.slice(10,12);
+                            const publishDate = new Date(`${year}-${month}-${day}T${hour}:${minute}:00`);
+                            
+                            const now = new Date();
+                            const diffHours = Math.floor((now.getTime() - publishDate.getTime()) / (1000 * 60 * 60));
+                            
+                            if(diffHours < 24) {
+                              return `${diffHours}小时前`;
+                            }
+                            
+                            const diffDays = Math.floor(diffHours / 24);
+                            return `${diffDays}天前`;
+                          })()}
                         </time>
                       </div>
-
-                      {/* 跳转到Twitter讨论的按钮 */}
-                      <a
-                        href={`https://x.com/search?q=${encodeURIComponent(
-                          title
-                        )}&f=live`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="not-prose mt-4 mb-6 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full font-medium text-sm transition-all"
-                      >
-                        <span>See discussion on</span>
-                        <XIcon className="w-4 h-4" />
-                      </a>
 
                       {/* 
                       条件渲染AI洞察组件
