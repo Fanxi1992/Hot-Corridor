@@ -646,7 +646,12 @@ export function SwipeCard({
                       - 仅在弹窗打开时加载
                       - 传入文章标题作为查询参数
                       */}
-                      {sheetOpen && <AIInsight query={title} />}
+                      {sheetOpen && (
+                        <AIInsight 
+                          query={title}
+                          content={content} 
+                        />
+                      )}
                     </article>
                   </div>
                 </SheetContent>
