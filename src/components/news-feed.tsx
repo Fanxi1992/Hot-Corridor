@@ -201,10 +201,10 @@ export default function NewsFeed({ newsArticles }: { newsArticles: NewsArticle[]
               </div>
               
               {/* 标题：突出显示已读完所有新闻 */}
-              <h3 className="text-xl font-semibold mb-2">All Caught Up!</h3>
+              <h3 className="text-xl font-semibold mb-2">真棒，当前热点已阅毕!</h3>
               
               {/* 副标题：提供友好的补充说明 */}
-              <p className="text-muted-foreground">You have caught up with all news for now.</p>
+              <p className="text-muted-foreground">今天的热点都看完啦，明天再来看吧！</p>
             </div>
           ) : (
             // 卡片堆叠渲染逻辑：最多显示3张卡片

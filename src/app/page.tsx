@@ -13,23 +13,23 @@ import { Metadata } from "next";
 // 这些配置用于SEO优化和社交媒体分享
 export const metadata: Metadata = {
   // 网站标题
-  title: "Epigram: Open-Source, Free, and AI-Powered News in Short.",
+  title: "HODLer: Master Crypto with Confidence.",
   // 网站描述
   description:
-    "An open-source, AI-powered news app for busy people. Stay updated with bite-sized news, real-time updates, and in-depth analysis. Experience balanced, trustworthy reporting tailored for fast-paced lifestyles in a sleek, user-friendly interface.",
+    "An AI-powered hotspot aggregator for crypto retail investors. Stay ahead with real-time updates on KOL opinions and crypto opportunities. Offering balanced and trustworthy insights, it’s designed for fast-paced lifestyles with a sleek, user-friendly interface and exceptional user experience.",
   // Open Graph协议配置，用于Facebook等社交媒体分享时的显示效果
   openGraph: {
-    title: "Epigram: Open-Source, Free, and AI-Powered News in Short.",
+    title: "HODLer: Master Crypto with Confidence.",
     description:
-      "An open-source, AI-powered news app for busy people. Stay updated with bite-sized news, real-time updates, and in-depth analysis. Experience balanced, trustworthy reporting tailored for fast-paced lifestyles in a sleek, user-friendly interface.",
+      "An AI-powered hotspot aggregator for crypto retail investors. Stay ahead with real-time updates on KOL opinions and crypto opportunities. Offering balanced and trustworthy insights, it’s designed for fast-paced lifestyles with a sleek, user-friendly interface and exceptional user experience.",
     images: [{ url: "/static/images/epigram-og.png" }], // 分享时显示的图片
   },
   // Twitter卡片配置，用于Twitter分享时的显示效果
   twitter: {
     card: "summary_large_image", // 大图模式
-    title: "Epigram: Open-Source, Free, and AI-Powered News in Short.",
+    title: "HODLer: Master Crypto with Confidence.",
     description:
-      "An open-source, AI-powered news app for busy people. Stay updated with bite-sized news, real-time updates, and in-depth analysis. Experience balanced, trustworthy reporting tailored for fast-paced lifestyles in a sleek, user-friendly interface.",
+      "An AI-powered hotspot aggregator for crypto retail investors. Stay ahead with real-time updates on KOL opinions and crypto opportunities. Offering balanced and trustworthy insights, it’s designed for fast-paced lifestyles with a sleek, user-friendly interface and exceptional user experience.",
     images: ["/static/images/epigram-og.png"], // Twitter分享图片
   },
 };
@@ -70,9 +70,19 @@ export default async function Home() {
   // 1. response.json()将响应体转换为JavaScript对象
   // 2. 使用类型注解NewsArticle[]确保数据类型安全
   // 3. await确保JSON解析完成
+  // 从API获取新闻文章数组
   const newsArticles: NewsArticle[] = await response.json();
 
-  console.log('newsArticles、cards获取的结果如下：', newsArticles);
+  // 打印原始新闻文章数量
+  console.log('获取到的新闻文章数量:', newsArticles.length);
+
+  // 使用Fisher-Yates洗牌算法随机打乱数组顺序
+  for (let i = newsArticles.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newsArticles[i], newsArticles[j]] = [newsArticles[j], newsArticles[i]];
+  }
+
+  console.log('打乱顺序后的新闻文章:', newsArticles);
 
   // 返回页面JSX结构
   return (

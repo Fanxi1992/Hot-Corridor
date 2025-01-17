@@ -7,4 +7,5 @@ export type NewsArticle = {
     summary: string;
     image?: string;
     favicon: string;
+    [key: string]: any;  // 允许任何其他额外属性
 }

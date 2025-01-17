@@ -40,12 +40,12 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   // 网站标题：简洁明了地描述应用的核心价值主张
   // 对SEO和用户认知至关重要，会出现在搜索引擎结果和浏览器标签中
-  title: "Epigram: Open-Source, Free, and AI-Powered News in Short.",
+  title: "HODLer: Master Crypto with Confidence.",
 
   // 网站描述：详细解释应用的功能和独特卖点
   // 搜索引擎使用这段描述来理解网站内容，对SEO排名有重要影响
   description:
-    "An open-source, AI-powered news app for busy people. Stay updated with bite-sized news, real-time updates, and in-depth analysis. Experience balanced, trustworthy reporting tailored for fast-paced lifestyles in a sleek, user-friendly interface.",
+    "An AI-powered hotspot aggregator for crypto retail investors. Stay ahead with real-time updates on KOL opinions and crypto opportunities. Offering balanced and trustworthy insights, it’s designed for fast-paced lifestyles with a sleek, user-friendly interface and exceptional user experience.",
 
   // PWA清单文件路径
   // 定义了渐进式Web应用的基本配置，包括图标、名称等
@@ -66,15 +66,15 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true, // 标记为可安装的Web应用
     statusBarStyle: "black-translucent", // 状态栏样式，提供沉浸式体验
-    title: "Epigram", // 添加到主屏幕时显示的应用名称
+    title: "HODLer", // 添加到主屏幕时显示的应用名称
   },
 
   // Open Graph协议配置：定义社交媒体分享时的显示信息
   // 当链接被分享到Facebook、LinkedIn等平台时使用
   openGraph: {
-    title: "Epigram: Open-Source, Free, and AI-Powered News in Short.",
+    title: "HODLer: Master Crypto with Confidence.",
     description:
-      "An open-source, AI-powered news app for busy people. Stay updated with bite-sized news, real-time updates, and in-depth analysis. Experience balanced, trustworthy reporting tailored for fast-paced lifestyles in a sleek, user-friendly interface.",
+      "An AI-powered hotspot aggregator for crypto retail investors. Stay ahead with real-time updates on KOL opinions and crypto opportunities. Offering balanced and trustworthy insights, it’s designed for fast-paced lifestyles with a sleek, user-friendly interface and exceptional user experience.",
     images: [{ url: "/static/images/epigram-og.png" }], // 分享时显示的图片
   },
 
@@ -82,9 +82,9 @@ export const metadata: Metadata = {
   // 不同类型的卡片（summary, summary_large_image等）会影响链接预览的外观
   twitter: {
     card: "summary_large_image", // 使用大图卡片，视觉冲击力更强
-    title: "Epigram: Open-Source, Free, and AI-Powered News in Short.",
+    title: "HODLer: Master Crypto with Confidence.",
     description:
-      "An open-source, AI-powered news app for busy people. Stay updated with bite-sized news, real-time updates, and in-depth analysis. Experience balanced, trustworthy reporting tailored for fast-paced lifestyles in a sleek, user-friendly interface.",
+      "An AI-powered hotspot aggregator for crypto retail investors. Stay ahead with real-time updates on KOL opinions and crypto opportunities. Offering balanced and trustworthy insights, it’s designed for fast-paced lifestyles with a sleek, user-friendly interface and exceptional user experience.",
     images: ["/static/images/epigram-og.png"], // Twitter分享时的图片
   },
 
@@ -114,8 +114,28 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children, // 子组件/页面内容
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode; // React节点类型，表示可以传入任何有效的React子元素
 }) {
+  // RootLayout 根布局组件参数解析：
+  
+  // 1. children: 表示被包裹的子组件/页面内容
+  //    - 类型为 React.ReactNode，这是一个非常灵活的类型
+  //    - 可以接收：
+  //      * React元素（如 <div>、<Component>）
+  //      * 字符串
+  //      * 数字
+  //      * Fragment
+  //      * 组件数组
+  //      * null 或 undefined
+  
+  // 2. 解构赋值：从传入的props中直接提取children属性
+  //    - 这是一种现代JavaScript/TypeScript的语法糖
+  //    - 等同于 function RootLayout(props) { const children = props.children; }
+  
+  // 3. 类型注解 { children: React.ReactNode }
+  //    - 为children参数提供严格的类型检查
+  //    - 确保只能传入有效的React子元素
+  //    - 增强代码的类型安全性
   return (
     // lang属性设置为英文,suppressHydrationWarning用于抑制hydration警告
     <html lang="en" suppressHydrationWarning>
@@ -202,7 +222,7 @@ export default function RootLayout({
          * - 需要在环境变量中正确配置NEXT_PUBLIC_GA_ID
          * - 遵守用户隐私和数据保护相关法规
          */}
-        <Script
+        {/* <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
           strategy="afterInteractive"
         />
@@ -220,7 +240,7 @@ export default function RootLayout({
             // 配置特定网站的Google Analytics跟踪
             gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}');
           `}
-        </Script>
+        </Script> */}
       </head>
       {/* 主体内容 */}
       {/* 

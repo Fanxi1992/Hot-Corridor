@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
     // 从URL中获取查询参数
     const { searchParams } = new URL(req.url);
     // 获取categories参数,如果没有则使用默认分类
-    const categories = searchParams.get("categories") || "general,technology,science,health";
+    const categories = searchParams.get("categories") || "BTCETH,erjifenxi,yijilumao,lianshangwakuang,pumpmeme,universe";
     // 将分类字符串转换为数组
     const categoryList = categories.split(',');
 
@@ -83,18 +83,21 @@ export async function GET(req: NextRequest) {
     }
 
     // 使用自定义的去重函数，根据文章标题去除重复文章
-    // 这一步确保即使不同分类可能有相同的文章，最终只保留一份
+    // 这一步确保即使不同分类可能有相同的文章，title是唯一的，是经过处理之后的
     const uniqueArticles = getUniqueArticlesBy(newsArticles, 'title');
 
     // 对去重后的文章按发布日期进行降序排序
     // 使用 Date().getTime() 将日期转换为时间戳，便于比较
     // b - a 表示最新的文章排在前面
-    uniqueArticles.sort((a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime());
+    // uniqueArticles.sort((a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime());
 
     // 限制返回的文章数量为最新的100篇
     // slice(0, 100) 表示取数组的前100个元素
     // 这样可以防止返回过多的文章，保持接口响应的轻量和高效
-    const topArticles = uniqueArticles.slice(0, 100);
+    // 根据数组长度决定返回全部还是随机100篇文章
+    const topArticles = uniqueArticles.length <= 100 
+        ? uniqueArticles 
+        : Array.from({ length: 100 }, () => uniqueArticles[Math.floor(Math.random() * uniqueArticles.length)]);
 
     // 返回JSON格式的响应
     // 设置Content-Type为json
