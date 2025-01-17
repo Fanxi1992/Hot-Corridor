@@ -411,6 +411,46 @@ export function SwipeCard({
                 {title}
               </h2>
             </CardHeader>
+            </div>
+
+
+         {/* 内容区域 */}
+         <div className="flex flex-col flex-1 overflow-hidden">
+            <CardContent className="flex-grow py-6 px-6 relative -mt-2 overflow-y-auto pointer-events-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <p className="text-sm leading-normal text-gray-700 dark:text-gray-300 tracking-normal select-none">
+                <time dateTime={date} className="font-medium">
+                  {(() => {
+                    // 将日期字符串转换为Date对象
+                    // 格式: "202501132205" -> "2025-01-13 22:05"
+                    const year = date.slice(0,4);
+                    const month = date.slice(4,6);
+                    const day = date.slice(6,8);
+                    const hour = date.slice(8,10);
+                    const minute = date.slice(10,12);
+                    const publishDate = new Date(`${year}-${month}-${day}T${hour}:${minute}:00`);
+                    
+                    // 获取当前时间
+                    const now = new Date();
+                    
+                    // 计算时间差(小时)
+                    const diffHours = Math.floor((now.getTime() - publishDate.getTime()) / (1000 * 60 * 60));
+                    
+                    // 如果小于24小时,显示"xx小时前"
+                    if(diffHours < 24) {
+                      return `${diffHours}小时前`;
+                    }
+                    
+                    // 如果大于等于24小时,显示"xx天前" 
+                    const diffDays = Math.floor(diffHours / 24);
+                    return `${diffDays}天前`;
+                  })()}
+                </time>
+                &nbsp;&middot;&nbsp;
+                {content.length > 370 ? `${content.slice(0, 370)}...` : content}
+              </p>
+            </CardContent>
+
+
             {/* 
             底部操作区域 - 卡片交互控制栏
             主要功能：
@@ -437,8 +477,8 @@ export function SwipeCard({
                   }}
                   className="text-muted-foreground hover:text-foreground"  // 颜色变化效果
                 >
-                  <StepBack className="w-4 h-4" />  // 返回图标
-                  后退  // 按钮文本
+                  <StepBack className="w-4 h-4" /> 
+                  后退
                 </Button>
               )}
 
