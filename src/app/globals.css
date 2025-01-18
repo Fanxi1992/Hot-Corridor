@@ -450,3 +450,9 @@ body {
 .font-sans {
   font-display: swap;
 }
+
+
+.ai-insight-content {
+  max-width: 100%; /* 或者设置具体的宽度, 比如 1200px */
+  overflow-x: hidden; /* 防止水平滚动 */
+}

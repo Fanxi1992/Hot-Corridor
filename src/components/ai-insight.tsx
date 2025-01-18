@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { marked } from "marked";
+import { debounce } from 'lodash';  // 现在这行导入就不会报错了
 import { Skeleton } from "@/components/ui/skeleton";
 
 // 修改接口定义,添加content参数
@@ -20,32 +21,12 @@ export function AIInsight({ query, content }: AIInsightProps) {
   // 保留内容容器的 ref
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // 使用防抖函数来减少滚动检查的频率
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    
-    const checkScroll = () => {
-      const { scrollTop, scrollHeight } = document.documentElement;
-      const viewportHeight = window.innerHeight;
-      
-      // 如果距离底部很近，并且有新内容，才滚动
-      if (scrollHeight - scrollTop - viewportHeight < 100) {
-        window.scrollTo({
-          top: document.documentElement.scrollHeight,
-          behavior: 'instant' // 使用 instant 而不是 smooth 来避免动画导致的跳动
-        });
-      }
-    };
 
-    if (streamContent) {
-      // 使用 requestAnimationFrame 来优化性能
-      timeoutId = setTimeout(() => {
-        requestAnimationFrame(checkScroll);
-      }, 100);
-    }
+  // 使用 debounce 来减少状态更新频率
+  const updateStreamContent = debounce((newContent: string) => {
+    setStreamContent(newContent);
+  }, 300); // 300ms 防抖
 
-    return () => clearTimeout(timeoutId);
-  }, [streamContent]);
 
   useEffect(() => {
     // 重置状态
@@ -101,7 +82,7 @@ export function AIInsight({ query, content }: AIInsightProps) {
               if (parsedData.text) {
                 accumulatedContent += parsedData.text;
                 // 更新状态以实现流式渲染
-                setStreamContent(accumulatedContent);
+                updateStreamContent(accumulatedContent);
               }
             } catch (parseError) {
               console.error('解析 JSON 出错:', parseError, '行:', line);

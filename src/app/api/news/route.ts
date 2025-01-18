@@ -87,7 +87,7 @@ export async function GET(req: NextRequest) {
     // 使用自定义的去重函数，根据文章标题去除重复文章
     // 这一步确保即使不同分类可能有相同的文章，title是唯一的，是经过处理之后的
     const uniqueArticles = getUniqueArticlesBy(newsArticles, 'title');
-
+    console.log('获取到的redis数据是',uniqueArticles);
     // 对去重后的文章按发布日期进行降序排序
     // 使用 Date().getTime() 将日期转换为时间戳，便于比较
     // b - a 表示最新的文章排在前面
