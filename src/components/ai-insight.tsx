@@ -35,7 +35,7 @@ export function AIInsight({ query, content }: AIInsightProps) {
     async function fetchAIInsights() {
       try {
         // 修改请求体,同时发送title和content
-        const response = await fetch('http://localhost:8000/api/ai-insights', {
+        const response = await fetch('http://43.156.99.86:8000/api/ai-insights', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
