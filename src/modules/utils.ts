@@ -1,25 +1,31 @@
-// 生成获取热门新闻的API URL的工具函数
-// 根据可选的分类参数动态构建请求URL
-export const getTopNewsUrl = (categories?: string) => {
-    // 创建URLSearchParams实例，用于构建URL查询参数
-    // URLSearchParams是浏览器内置对象，方便处理URL参数
-    const params = new URLSearchParams();
+// 导入智能URL管理模块
+import { buildApiUrl } from '@/lib/url-utils';
 
-    // 检查是否传入了分类参数
-    // categories是可选参数，可能为undefined
-    // 如果传入了分类，将其添加到查询参数中
+/**
+ * 生成获取热门新闻的API URL的工具函数
+ * 
+ * 使用智能URL检测功能，自动适配不同的部署环境：
+ * - Vercel环境：自动检测VERCEL_URL和自定义域名
+ * - 生产环境：使用BASE_URL环境变量
+ * - 开发环境：默认使用localhost:3000
+ * 
+ * @param categories - 可选的新闻分类参数（如 "technology,politics"）
+ * @returns 完整的新闻API请求URL
+ */
+export const getTopNewsUrl = (categories?: string): string => {
+    // 准备查询参数对象
+    const params: Record<string, string | undefined> = {};
+    
+    // 如果传入了分类参数，添加到查询参数中
     if (categories) {
-        // append方法将'categories'参数添加到URL查询字符串
-        // 例如：categories=technology,politics
-        params.append('categories', categories);
+        params.categories = categories;
     }
 
-    // 构建完整的API请求URL
-    // 1. process.env.BASE_URL：从环境变量获取基础URL
-    // 2. /api/news：API的具体路径
-    // 3. params.toString()：将查询参数转换为字符串
-    // 4. 三元运算符处理是否需要添加查询参数
-    //    - 如果有参数，添加 ?categories=...
-    //    - 如果没有参数，返回不带查询参数的URL
-    return `${process.env.BASE_URL}/api/news${params.toString() ? `?${params}` : ''}`;
+    // 使用智能URL构建功能生成完整的API URL
+    // buildApiUrl会自动：
+    // 1. 检测当前环境（Vercel/生产/开发）
+    // 2. 选择合适的基础URL
+    // 3. 构建完整的URL和查询参数
+    // 4. 提供错误处理和fallback机制
+    return buildApiUrl('/api/news', params);
 };

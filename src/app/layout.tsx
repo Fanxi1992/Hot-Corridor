@@ -4,6 +4,7 @@ import "./globals.css"; // 导入全局CSS样式
 import { ThemeProvider } from "@/components/theme-provider"; // 导入主题提供者组件,用于管理暗/亮主题
 import { IOSHandler } from "@/components/ios-handler"; // 导入iOS相关处理组件
 import Script from "next/script"; // 导入Next.js的Script组件,用于管理JavaScript脚本
+import { getPublicUrl } from "@/lib/url-utils"; // 导入智能URL管理功能
 
 // 配置视口(viewport)设置
 // 这些设置对移动端体验很重要,控制页面在移动设备上的显示方式
@@ -52,8 +53,9 @@ export const metadata: Metadata = {
   manifest: "/manifest.json", 
 
   // 元数据的基础URL，用于生成规范的绝对URL
+  // 使用智能URL检测，自动适配Vercel环境和自定义域名
   // 确保所有相对链接都能正确解析，对SEO很重要
-  metadataBase: new URL(process.env.BASE_URL!), 
+  metadataBase: new URL(getPublicUrl()), 
 
   // 规范链接配置，帮助搜索引擎理解网站的首选域名
   // 防止重复内容问题，consolidate网站的搜索权重
