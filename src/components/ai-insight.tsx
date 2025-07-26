@@ -34,17 +34,27 @@ export function AIInsight({ query, content }: AIInsightProps) {
 
     async function fetchAIInsights() {
       try {
-        // 修改请求体,同时发送title和content
-        const response = await fetch('http://43.156.99.86:8000/api/ai-insights', {
+        // 第一步：获取相关新闻源
+        const sourcesResponse = await fetch(`/api/news/ai-insights/sources?query=${encodeURIComponent(query)}`);
+        
+        if (!sourcesResponse.ok) {
+          throw new Error(`Failed to fetch sources: ${sourcesResponse.status}`);
+        }
+
+        const { sources } = await sourcesResponse.json();
+        
+        if (!sources || sources.length === 0) {
+          setStreamContent('未找到相关的新闻源进行分析。');
+          return;
+        }
+
+        // 第二步：发送sources到AI分析接口
+        const response = await fetch('/api/news/ai-insights', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer 23422'
+            'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ 
-            query,    // 标题
-            content  // 内容
-          })
+          body: JSON.stringify({ sources })
         });
 
         if (!response.ok) {
@@ -94,6 +104,11 @@ export function AIInsight({ query, content }: AIInsightProps) {
               continue;
             }
           }
+        }
+
+        // 确保最后的内容也被设置
+        if (accumulatedContentRef.current.content) {
+          setStreamContent(accumulatedContentRef.current.content);
         }
       } catch (error) {
         console.error('Error:', error);
